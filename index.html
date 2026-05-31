@@ -1,0 +1,1576 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="AI Mktg">
+<meta name="theme-color" content="#0A0A0F">
+<meta name="description" content="AI-Powered Marketing Workspace">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<link rel="icon" href="icons/icon-192.png">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600;700&family=Syne:wght@700;800&display=swap" rel="stylesheet">
+<title>AI Marketing System</title>
+<style>
+  :root {
+    --bg: #0A0A0F;
+    --bg2: #0D0D18;
+    --bg3: #13131F;
+    --border: #1E1E30;
+    --border2: #2A2A40;
+    --text: #E8E8F0;
+    --text2: #8888AA;
+    --text3: #5A5A80;
+    --accent: #6C5CE7;
+    --accent2: #A29BFE;
+    --safe-top: env(safe-area-inset-top, 0px);
+    --safe-bot: env(safe-area-inset-bottom, 0px);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  html, body { height: 100%; overflow: hidden; background: var(--bg); color: var(--text); font-family: 'IBM Plex Mono', monospace; }
+
+  /* ── SCREENS ── */
+  .screen { position: fixed; inset: 0; display: flex; flex-direction: column; transition: transform 0.32s cubic-bezier(.4,0,.2,1), opacity 0.32s; }
+  .screen.hidden { transform: translateX(100%); opacity: 0; pointer-events: none; }
+  .screen.slide-left { transform: translateX(-30%); opacity: 0; pointer-events: none; }
+
+  /* ── STATUS BAR SPACER ── */
+  .status-bar { height: calc(var(--safe-top) + 44px); background: var(--bg2); flex-shrink: 0; display: flex; align-items: flex-end; padding: 0 16px 10px; border-bottom: 1px solid var(--border); }
+
+  /* ── HOME SCREEN ── */
+  #home .status-bar { background: linear-gradient(180deg, #0F0F1A, var(--bg2)); }
+  .home-header { padding: 20px 20px 16px; flex-shrink: 0; }
+  .home-label { font-size: 10px; color: var(--text3); letter-spacing: 3px; text-transform: uppercase; margin-bottom: 4px; }
+  .home-title { font-family: 'Syne', sans-serif; font-size: 26px; font-weight: 800; color: #fff; line-height: 1.1; }
+  .home-sub { font-size: 11px; color: var(--text3); margin-top: 6px; }
+
+  .search-wrap { padding: 0 16px 14px; flex-shrink: 0; }
+  .search-box { width: 100%; background: var(--bg3); border: 1px solid var(--border2); border-radius: 12px; padding: 11px 16px 11px 40px; color: var(--text); font-family: inherit; font-size: 13px; outline: none; position: relative; }
+  .search-icon { position: absolute; left: 28px; top: 50%; transform: translateY(-50%); font-size: 15px; pointer-events: none; }
+  .search-container { position: relative; }
+
+  /* README pill */
+  .readme-pill { margin: 0 16px 16px; background: linear-gradient(135deg, #1A1A2E, #2A1A3E); border: 1px solid var(--accent); border-radius: 12px; padding: 14px 16px; display: flex; align-items: center; gap: 12px; cursor: pointer; flex-shrink: 0; }
+  .readme-pill-icon { font-size: 24px; }
+  .readme-pill-text { flex: 1; }
+  .readme-pill-title { font-size: 13px; font-weight: 600; color: var(--accent2); }
+  .readme-pill-sub { font-size: 10px; color: var(--text3); margin-top: 2px; }
+  .readme-pill-arrow { color: var(--accent); font-size: 14px; }
+
+  /* Folder list */
+  .folder-list { flex: 1; overflow-y: auto; padding: 0 16px 80px; -webkit-overflow-scrolling: touch; }
+  .folder-card { background: var(--bg2); border: 1px solid var(--border); border-radius: 14px; padding: 14px 16px; margin-bottom: 10px; display: flex; align-items: center; gap: 14px; cursor: pointer; transition: border-color 0.15s, background 0.15s; active-opacity: 0.7; }
+  .folder-card:active { opacity: 0.7; transform: scale(0.98); }
+  .folder-icon-wrap { width: 44px; height: 44px; border-radius: 11px; display: flex; align-items: center; justify-content: center; font-size: 22px; flex-shrink: 0; }
+  .folder-info { flex: 1; min-width: 0; }
+  .folder-name { font-size: 13px; font-weight: 600; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .folder-desc { font-size: 10px; color: var(--text3); margin-top: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .folder-badge { font-size: 10px; border-radius: 6px; padding: 2px 8px; flex-shrink: 0; font-weight: 600; }
+  .folder-arrow { color: var(--text3); font-size: 12px; margin-left: 4px; }
+
+  /* ── FOLDER SCREEN ── */
+  #folder .status-bar { gap: 10px; }
+  .back-btn { background: none; border: none; color: var(--text2); font-size: 20px; cursor: pointer; padding: 2px 6px; font-family: inherit; }
+  .nav-title { font-size: 14px; font-weight: 600; color: var(--text); flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+  .folder-content { flex: 1; overflow-y: auto; padding: 16px; -webkit-overflow-scrolling: touch; }
+  .section-label { font-size: 10px; color: var(--text3); letter-spacing: 2px; text-transform: uppercase; margin-bottom: 10px; margin-top: 4px; }
+
+  .file-card { background: var(--bg2); border: 1px solid var(--border); border-radius: 12px; padding: 14px 16px; margin-bottom: 10px; display: flex; align-items: center; gap: 12px; cursor: pointer; }
+  .file-card:active { opacity: 0.7; }
+  .file-type-icon { font-size: 24px; width: 40px; text-align: center; flex-shrink: 0; }
+  .file-info { flex: 1; min-width: 0; }
+  .file-name { font-size: 12px; font-weight: 600; color: var(--text); }
+  .file-tag { display: inline-block; font-size: 9px; border-radius: 4px; padding: 2px 6px; margin-top: 5px; text-transform: uppercase; letter-spacing: 1px; font-weight: 600; }
+  .file-arrow { color: var(--text3); font-size: 12px; }
+
+  /* Client subfolder */
+  .client-card { background: var(--bg2); border: 1px solid var(--border); border-radius: 12px; margin-bottom: 10px; overflow: hidden; }
+  .client-header { padding: 14px 16px; display: flex; align-items: center; gap: 12px; cursor: pointer; }
+  .client-header:active { opacity: 0.7; }
+  .client-name { font-size: 13px; font-weight: 600; color: var(--text); flex: 1; }
+  .client-chevron { color: var(--text3); font-size: 12px; transition: transform 0.2s; }
+  .client-chevron.open { transform: rotate(90deg); }
+  .client-body { padding: 0 16px 14px; border-top: 1px solid var(--border); display: none; }
+  .client-body.open { display: block; }
+  .subfolder-chips { display: flex; flex-wrap: wrap; gap: 7px; margin: 12px 0; }
+  .chip { font-size: 10px; padding: 4px 10px; border-radius: 6px; font-weight: 600; }
+  .client-readme { background: var(--bg3); border-radius: 8px; padding: 12px; font-size: 11px; color: var(--text3); line-height: 1.6; white-space: pre-wrap; margin-top: 6px; }
+
+  /* ── FILE SCREEN ── */
+  #file .status-bar { gap: 10px; }
+  .file-header-info { flex: 1; min-width: 0; }
+  .file-header-name { font-size: 13px; font-weight: 600; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .file-header-tag { font-size: 9px; border-radius: 4px; padding: 1px 6px; text-transform: uppercase; letter-spacing: 1px; margin-top: 3px; display: inline-block; }
+
+  .copy-btn { background: var(--bg3); border: 1px solid var(--border2); border-radius: 8px; color: var(--text2); font-size: 11px; padding: 6px 12px; cursor: pointer; font-family: inherit; flex-shrink: 0; }
+  .copy-btn.copied { background: #00b894; border-color: #00b894; color: #fff; }
+
+  .file-body { flex: 1; overflow-y: auto; padding: 16px; -webkit-overflow-scrolling: touch; }
+  .file-content { background: var(--bg2); border: 1px solid var(--border); border-radius: 14px; padding: 18px; font-size: 12px; line-height: 1.8; color: #C8C8E0; white-space: pre-wrap; font-family: 'IBM Plex Mono', monospace; }
+
+  /* ── BOTTOM NAV ── */
+  .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; height: calc(60px + var(--safe-bot)); background: rgba(13,13,24,0.96); border-top: 1px solid var(--border); display: flex; align-items: flex-start; padding-top: 8px; backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); z-index: 200; }
+  .nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; cursor: pointer; padding: 4px 0; }
+  .nav-item:active { opacity: 0.6; }
+  .nav-icon { font-size: 20px; }
+  .nav-label { font-size: 9px; letter-spacing: 0.5px; text-transform: uppercase; color: var(--text3); transition: color 0.15s; }
+  .nav-item.active .nav-label { color: var(--accent2); }
+  .nav-item.active .nav-icon { filter: drop-shadow(0 0 6px var(--accent)); }
+
+  /* ── README SCREEN ── */
+  #readme .status-bar { gap: 10px; }
+  .readme-body { flex: 1; overflow-y: auto; padding: 16px; -webkit-overflow-scrolling: touch; }
+  .readme-content { background: var(--bg2); border: 1px solid var(--border); border-radius: 14px; padding: 18px; font-size: 12px; line-height: 1.8; color: #C8C8E0; white-space: pre-wrap; font-family: 'IBM Plex Mono', monospace; }
+
+  /* ── PROMPTS QUICK SCREEN ── */
+  .prompt-quick-card { background: var(--bg2); border: 1px solid var(--border); border-radius: 12px; padding: 16px; margin-bottom: 12px; }
+  .pq-title { font-size: 13px; font-weight: 700; color: var(--accent2); margin-bottom: 6px; }
+  .pq-desc { font-size: 11px; color: var(--text3); line-height: 1.6; margin-bottom: 12px; }
+  .pq-btn { background: linear-gradient(135deg, var(--accent), var(--accent2)); border: none; border-radius: 8px; color: #fff; font-size: 11px; padding: 8px 14px; cursor: pointer; font-family: inherit; font-weight: 600; }
+
+  /* Toast */
+  .toast { position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%) translateY(20px); background: #00b894; color: #fff; padding: 10px 20px; border-radius: 20px; font-size: 12px; opacity: 0; transition: all 0.3s; pointer-events: none; z-index: 999; white-space: nowrap; }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 3px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
+
+  @media (min-width: 600px) {
+    .screen { max-width: 420px; margin: 0 auto; border-left: 1px solid var(--border); border-right: 1px solid var(--border); }
+    .bottom-nav { max-width: 420px; left: 50%; transform: translateX(-50%); }
+    .toast { bottom: 90px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- TOAST -->
+<div class="toast" id="toast">✓ Copied to clipboard!</div>
+
+<!-- ══════════════════════════════════════
+     SCREEN 1: HOME
+══════════════════════════════════════ -->
+<div class="screen" id="home">
+  <div class="status-bar">
+    <div style="flex:1">
+      <div style="font-size:10px;color:#5A5A80;letter-spacing:2px;text-transform:uppercase">Granderberry AI</div>
+    </div>
+    <div style="font-size:11px;color:#5A5A80" id="clock"></div>
+  </div>
+
+  <div class="home-header">
+    <div class="home-label">Performance Marketing</div>
+    <div class="home-title">AI Marketing<br>System</div>
+    <div class="home-sub">15 folders · Claude-powered workflow</div>
+  </div>
+
+  <div class="search-wrap">
+    <div class="search-container">
+      <span class="search-icon">🔍</span>
+      <input class="search-box" id="searchInput" type="search" placeholder="Search folders & files..." oninput="filterFolders(this.value)">
+    </div>
+  </div>
+
+  <div class="readme-pill" onclick="openReadme()">
+    <div class="readme-pill-icon">📄</div>
+    <div class="readme-pill-text">
+      <div class="readme-pill-title">AI_SYSTEM_README.txt</div>
+      <div class="readme-pill-sub">Master guide — how to use this system daily</div>
+    </div>
+    <div class="readme-pill-arrow">›</div>
+  </div>
+
+  <div class="folder-list" id="folderList"></div>
+</div>
+
+<!-- ══════════════════════════════════════
+     SCREEN 2: FOLDER
+══════════════════════════════════════ -->
+<div class="screen hidden" id="folder">
+  <div class="status-bar">
+    <button class="back-btn" onclick="goBack('folder','home')">‹</button>
+    <div class="nav-title" id="folderTitle">Folder</div>
+  </div>
+  <div class="folder-content" id="folderContent"></div>
+</div>
+
+<!-- ══════════════════════════════════════
+     SCREEN 3: FILE
+══════════════════════════════════════ -->
+<div class="screen hidden" id="file">
+  <div class="status-bar">
+    <button class="back-btn" onclick="goBack('file','folder')">‹</button>
+    <div class="file-header-info">
+      <div class="file-header-name" id="fileTitle">File</div>
+      <div class="file-header-tag" id="fileTag">txt</div>
+    </div>
+    <button class="copy-btn" id="copyBtn" onclick="copyFile()">Copy</button>
+  </div>
+  <div class="file-body">
+    <div class="file-content" id="fileContent"></div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     SCREEN 4: README
+══════════════════════════════════════ -->
+<div class="screen hidden" id="readme">
+  <div class="status-bar">
+    <button class="back-btn" onclick="goBack('readme','home')">‹</button>
+    <div class="nav-title">AI_SYSTEM_README.txt</div>
+    <button class="copy-btn" onclick="copyReadme()">Copy</button>
+  </div>
+  <div class="readme-body">
+    <div class="readme-content" id="readmeContent"></div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     BOTTOM NAV
+══════════════════════════════════════ -->
+<div class="bottom-nav" id="bottomNav">
+  <div class="nav-item active" id="nav-folders" onclick="navTo('home','folders')">
+    <span class="nav-icon">📁</span>
+    <span class="nav-label">Folders</span>
+  </div>
+  <div class="nav-item" id="nav-prompts" onclick="navTo('prompts-screen','prompts')">
+    <span class="nav-icon">🤖</span>
+    <span class="nav-label">Prompts</span>
+  </div>
+  <div class="nav-item" id="nav-sops" onclick="navTo('sops-screen','sops')">
+    <span class="nav-icon">✅</span>
+    <span class="nav-label">SOPs</span>
+  </div>
+  <div class="nav-item" id="nav-readme" onclick="openReadme();setActiveNav('readme-nav')">
+    <span class="nav-icon">📄</span>
+    <span class="nav-label">Guide</span>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     SCREEN 5: PROMPTS QUICK ACCESS
+══════════════════════════════════════ -->
+<div class="screen hidden" id="prompts-screen">
+  <div class="status-bar">
+    <div style="font-size:20px">🤖</div>
+    <div class="nav-title">Claude Prompts</div>
+  </div>
+  <div class="folder-content" id="promptsContent"></div>
+</div>
+
+<!-- ══════════════════════════════════════
+     SCREEN 6: SOPs QUICK ACCESS
+══════════════════════════════════════ -->
+<div class="screen hidden" id="sops-screen">
+  <div class="status-bar">
+    <div style="font-size:20px">✅</div>
+    <div class="nav-title">SOPs & Checklists</div>
+  </div>
+  <div class="folder-content" id="sopsContent"></div>
+</div>
+
+<script>
+// ══════════════════════════════════════
+// DATA
+// ══════════════════════════════════════
+const README_TEXT = `╔══════════════════════════════════════════════════════════╗
+║         AI MARKETING SYSTEM — MASTER GUIDE              ║
+║         Powered by Claude AI | Granderberry             ║
+╚══════════════════════════════════════════════════════════╝
+
+WHAT IS THIS SYSTEM?
+────────────────────
+A structured AI-powered marketing workspace for performance
+marketers running Meta Ads, TikTok Ads, Shopify, WordPress,
+CRO, and content operations. Every folder has a clear
+purpose. Every file has a role. Claude is your AI co-pilot.
+
+HOW THE SYSTEM WORKS
+────────────────────
+Think of this as your marketing "brain" on your phone.
+Feed it with data (reports, briefs, copies) and extract
+intelligence by pasting file contents into Claude.
+
+FOLDER LOGIC:
+  01–05  → Strategy & Output
+  06–09  → Platform-specific work
+  10–12  → Optimization intelligence
+  13–15  → Operations & growth
+
+WHERE TO SAVE THINGS
+────────────────────
+  📊 Ad reports          → 03-Campaign Reports
+  ✍️  Ad copy drafts     → 02-Ad Copies
+  🎯 Prompts for Claude  → 12-Prompts
+  📋 Brand strategy      → 01-Brand Briefs
+  🏪 Shopify CRO work    → 06-Shopify Projects
+  📱 TikTok scripts      → 08-TikTok Ads
+  📣 Meta campaign files → 09-Meta Ads
+  🔁 Process checklists  → 13-SOPs
+  👥 Client work         → 14-Clients/[Name]
+
+HOW TO USE CLAUDE DAILY
+────────────────────────
+MORNING (10 min):
+  1. Open 03-Campaign Reports
+  2. Grab yesterday's CSV
+  3. Paste into Claude with Meta Analysis Prompt
+  4. Get: winners, losers, budget recommendations
+  5. Save insights to 14-Clients/[Name]/Reports
+
+COPY CREATION:
+  1. Open 01-Brand Briefs → find client brief
+  2. Paste brief + Content Hooks Prompt into Claude
+  3. Get 20 hooks instantly
+  4. Save to 02-Ad Copies/[Client]/[Date]
+
+CRO WORK:
+  1. Open 10-CRO Notes → review observations
+  2. Use CRO Prompt with landing page content
+  3. Claude audits friction, suggests fixes
+  4. Log actions in 10-CRO Notes
+
+PLATFORM USAGE
+──────────────
+  META ADS:  09-Meta Ads + 02-Copies + 12-Prompts
+  TIKTOK:    08-TikTok Ads + 11-Content Ideas
+  SHOPIFY:   06-Shopify + 10-CRO Notes + 13-SOPs
+  WORDPRESS: 07-WordPress + 11-Content Ideas
+  CRO:       10-CRO Notes + 05-Landing Pages
+  CONTENT:   11-Ideas + 02-Copies + 04-Creatives
+
+GOLDEN RULE
+───────────
+Every insight goes INTO the system. Every client file
+lives in 14-Clients. Every reusable prompt lives in
+12-Prompts. This system compounds over time.`;
+
+const FOLDERS = [
+  {
+    id:"01", name:"01-Brand Briefs", icon:"📋", color:"#FF6B35",
+    desc:"Master brand documents for every client",
+    files:[
+      { name:"Brand_Brief_Template.txt", type:"template",
+        content:`BRAND BRIEF TEMPLATE
+════════════════════════════════════════
+
+CLIENT NAME: ___________________________
+DATE: __________________________________
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+1. BRAND IDENTITY
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Brand Name:
+Tagline:
+Mission Statement:
+Industry:
+
+2. TARGET AUDIENCE
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Primary Age Range:
+Gender:
+Location:
+Income Level:
+Interests:
+Pain Points:
+Desires:
+
+3. BRAND VOICE & TONE
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Tone: [ ] Professional [ ] Casual [ ] Luxury [ ] Playful
+Voice Keywords (3 words):
+  1.
+  2.
+  3.
+Brands we sound LIKE:
+Brands we do NOT sound like:
+
+4. PRODUCTS / SERVICES
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Hero Product/Service:
+Price Point:
+Key Benefits:
+  -
+  -
+  -
+Unique Selling Proposition (USP):
+
+5. COMPETITORS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Main Competitors:
+Our Competitive Advantage:
+
+6. MARKETING GOALS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Primary Goal: [ ] Sales [ ] Leads [ ] Awareness
+Monthly Ad Budget:
+Target CPA:
+Target ROAS:
+
+7. PLATFORMS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+[ ] Meta Ads  [ ] TikTok  [ ] Google
+[ ] Shopify   [ ] WordPress
+
+8. CREATIVE DIRECTION
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Brand Colors (HEX):
+Visual Style:
+Creative Do's:
+Creative Don'ts:
+
+9. NOTES FOR CLAUDE
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Paste this brief to Claude before generating
+any copy, hooks, or campaign strategy.` }
+    ]
+  },
+  {
+    id:"02", name:"02-Ad Copies", icon:"✍️", color:"#E84393",
+    desc:"All ad copy drafts, variations, and approved versions",
+    files:[
+      { name:"Copy_Framework_Guide.txt", type:"guide",
+        content:`AD COPY FRAMEWORKS — QUICK REFERENCE
+═══════════════════════════════════════════
+
+FRAMEWORK 1: PAS
+Problem → Agitate → Solution
+Best for: Pain-point products, health, finance
+
+FRAMEWORK 2: AIDA
+Attention → Interest → Desire → Action
+Best for: Cold traffic, awareness campaigns
+
+FRAMEWORK 3: BEFORE/AFTER/BRIDGE
+Before (pain) → After (dream) → Bridge (product)
+Best for: Transformation products, beauty, courses
+
+FRAMEWORK 4: HOOK + PROOF + CTA
+Strong hook → Social proof → Clear CTA
+Best for: Retargeting, warm audiences
+
+FRAMEWORK 5: CURIOSITY GAP
+Create intrigue → Hold info → Reveal + CTA
+Best for: TikTok, Reels, UGC
+
+FILE NAMING CONVENTION:
+[Client]_[Platform]_[Objective]_[Date]_v[N]
+Example: PerfumeBrand_Meta_Retargeting_2025-06_v2.txt
+
+FOLDER STRUCTURE:
+/[ClientName]/
+  /Meta/
+  /TikTok/
+  /Email/
+  /Approved/ ← Final approved copies here` }
+    ]
+  },
+  {
+    id:"03", name:"03-Campaign Reports", icon:"📊", color:"#00C9A7",
+    desc:"Performance data exports and AI analysis outputs",
+    files:[
+      { name:"README.txt", type:"readme",
+        content:`CAMPAIGN REPORTS — HOW TO USE WITH AI
+═══════════════════════════════════════════
+
+WHAT TO SAVE HERE:
+  • Meta Ads Manager CSV exports
+  • TikTok Ads Manager exports
+  • Google Analytics exports
+  • Claude AI analysis outputs (save as TXT)
+
+FILE NAMING:
+  Meta:    Meta_[Client]_[YYYY-MM-DD]_[Level].csv
+  TikTok:  TikTok_[Client]_[YYYY-MM-DD].csv
+  Analysis: [Client]_Analysis_[Date].txt
+
+HOW TO USE WITH CLAUDE:
+  1. Export CSV from Meta or TikTok
+  2. Open 12-Prompts → Meta Analysis Prompt
+  3. Paste prompt + CSV data into Claude
+  4. Claude returns:
+     - Top performing campaigns
+     - Budget recommendations
+     - Audience insights
+     - Creative fatigue signals
+     - Next 7-day action items
+  5. Save Claude's analysis as TXT here
+
+COLUMNS TO EXPORT FROM META:
+Campaign | Ad Set | Ad | Spend | Impressions |
+Reach | Clicks | CTR | CPC | CPM | Results |
+CPA | ROAS | Frequency` },
+      { name:"Meta_Report_Example.csv", type:"csv",
+        content:`Campaign Name,Ad Set,Ad Name,Spend (MAD),Impressions,Clicks,CTR%,CPC,ROAS,CPA
+Summer Sale,Women 25-34,Video Hook v1,1250,45000,890,1.98,1.40,3.2,54.35
+Summer Sale,Women 25-34,Carousel Benefits,980,38000,620,1.63,1.58,2.8,65.33
+Summer Sale,Men 30-45,Static Image v1,750,29000,410,1.41,1.83,2.1,83.33
+Retargeting,Visitors 7d,Testimonial Video,420,12000,380,3.17,1.11,5.6,23.33
+Retargeting,Visitors 7d,Discount Offer,380,10500,290,2.76,1.31,4.9,27.14
+Lookalike 2%,LAL Women,UGC Creative v2,1100,52000,1020,1.96,1.08,3.8,39.29` },
+      { name:"TikTok_Report_Example.csv", type:"csv",
+        content:`Campaign,Ad Group,Ad Name,Spend (MAD),Impressions,Video Views,VTR%,Clicks,CTR%,CPA
+Brand Awareness,Women 18-30,Hook Problem,890,120000,85000,70.83,1200,1.00,74.17
+Brand Awareness,Women 18-30,Hook Transform,1050,135000,98000,72.59,1580,1.17,58.33
+Conversion,Interest Beauty,Product Demo,750,65000,41000,63.08,920,1.42,83.33
+Conversion,Interest Fashion,UGC Testimonial,620,58000,39000,67.24,780,1.34,56.36` }
+    ]
+  },
+  {
+    id:"04", name:"04-Creatives", icon:"🎨", color:"#845EF7",
+    desc:"Creative briefs, asset requests, and visual strategy",
+    files:[
+      { name:"Creative_Brief_Template.txt", type:"template",
+        content:`CREATIVE BRIEF
+══════════════════════════════════════
+
+CLIENT: ________________________________
+CAMPAIGN: ______________________________
+DATE: __________________________________
+
+OBJECTIVE:
+[ ] Awareness [ ] Engagement [ ] Conversion [ ] Retargeting
+
+FORMATS NEEDED:
+[ ] Story/Reels 9:16 (1080x1920)
+[ ] Feed Post 1:1 (1080x1080)
+[ ] Feed Post 4:5 (1080x1350)
+[ ] TikTok Video 9:16
+[ ] Carousel (3-10 slides)
+[ ] Static Banner
+
+HOOK (First 3 seconds):
+Type: [ ] Text [ ] Visual [ ] Sound [ ] Question
+Hook Line:
+
+MAIN MESSAGE:
+Core benefit:
+Supporting proof:
+Emotion to trigger:
+
+VISUAL DIRECTION:
+Style: [ ] UGC [ ] Studio [ ] Lifestyle [ ] Animation
+Colors: (from brand brief)
+On-screen text: YES / NO
+Language: [ ] Arabic [ ] French [ ] English
+
+CTA:
+Button text:
+URL/Link:
+Urgency element:
+
+REFERENCES:
+1.
+2.
+
+DEADLINE: ______________________________` }
+    ]
+  },
+  {
+    id:"05", name:"05-Landing Pages", icon:"🖥️", color:"#FF9F1C",
+    desc:"Landing page copy, structure docs, CRO versions",
+    files:[
+      { name:"Landing_Page_Structure.txt", type:"template",
+        content:`LANDING PAGE STRUCTURE — AI OPTIMIZED
+════════════════════════════════════════════
+
+SECTION 1: HERO (Above the fold)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Headline (max 8 words):
+Subheadline (max 15 words):
+Primary CTA Button:
+Trust element (e.g. "4.9★ · 2,400+ reviews"):
+
+SECTION 2: PROBLEM / PAIN
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Pain statement headline:
+3 pain points:
+  •
+  •
+  •
+
+SECTION 3: SOLUTION
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Product intro:
+3-5 key benefits:
+  ✓
+  ✓
+  ✓
+
+SECTION 4: SOCIAL PROOF
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Reviews count:
+3 testimonials:
+  1.
+  2.
+  3.
+
+SECTION 5: OFFER
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Price:
+Original price:
+What's included:
+Guarantee:
+Scarcity/Urgency:
+
+SECTION 6: FAQ
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Q:
+A:
+
+SECTION 7: FINAL CTA
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Closing headline:
+Final CTA:
+Risk reversal:
+
+CRO CHECKLIST:
+[ ] One primary CTA only
+[ ] CTA appears 3+ times
+[ ] Social proof above the fold
+[ ] Mobile speed < 3 seconds
+[ ] No nav menu (distraction-free)
+[ ] Trust badges visible
+[ ] Urgency/scarcity present` }
+    ]
+  },
+  {
+    id:"06", name:"06-Shopify Projects", icon:"🛍️", color:"#20BF6B",
+    desc:"Shopify store optimization and CRO projects",
+    files:[
+      { name:"Shopify_Store_Audit.txt", type:"template",
+        content:`SHOPIFY STORE CRO AUDIT
+════════════════════════════════════════
+
+Store URL: ____________________________
+Date: _________________________________
+
+TECHNICAL PERFORMANCE
+━━━━━━━━━━━━━━━━━━━━━
+Mobile Speed Score (PageSpeed): /100
+Desktop Speed Score:            /100
+Theme: ________________________________
+Apps installed:
+
+HOMEPAGE AUDIT
+━━━━━━━━━━━━━━
+[ ] Hero communicates value in <5 seconds
+[ ] Primary CTA visible above fold
+[ ] Trust badges present
+[ ] Mobile layout clean
+
+PRODUCT PAGE AUDIT
+━━━━━━━━━━━━━━━━━━
+[ ] Title includes keyword
+[ ] First image high quality
+[ ] Benefit-led description
+[ ] Reviews visible
+[ ] Sticky Add to Cart on mobile
+[ ] Upsell/cross-sell present
+[ ] Urgency element (stock, timer)
+
+CART/CHECKOUT AUDIT
+━━━━━━━━━━━━━━━━━━━
+[ ] Cart upsell configured
+[ ] Checkout trust badges visible
+[ ] Shipping bar / free shipping threshold
+[ ] Abandoned cart email flow active
+[ ] COD option (Morocco: critical)
+
+PRIORITY FIXES:
+1.
+2.
+3.` }
+    ]
+  },
+  {
+    id:"07", name:"07-WordPress Projects", icon:"📝", color:"#4ECDC4",
+    desc:"WordPress builds, content strategy, SEO projects",
+    files:[
+      { name:"WordPress_SEO_Content_Plan.txt", type:"template",
+        content:`WORDPRESS CONTENT & SEO PLAN
+════════════════════════════════════════
+
+Site: _________________________________
+Client: _______________________________
+Month: ________________________________
+
+CONTENT PILLARS (3-5 main topics)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+1.
+2.
+3.
+
+MONTHLY CONTENT CALENDAR
+━━━━━━━━━━━━━━━━━━━━━━━━
+Week 1:
+  Blog Title:
+  Target Keyword:
+  Word Count:
+  Claude Prompt Used:
+
+Week 2:
+  Blog Title:
+  Target Keyword:
+
+Week 3:
+  Blog Title:
+  Target Keyword:
+
+Week 4:
+  Blog Title:
+  Target Keyword:
+
+HOW TO USE CLAUDE FOR WORDPRESS:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+1. Paste brand brief + keyword into Claude
+2. Ask for: Full SEO post with H1, H2s, meta desc
+3. Request internal linking suggestions
+4. Ask for FAQ schema markup
+5. Verify with Yoast or RankMath
+6. Save final post here + in 14-Clients/[Name]/` }
+    ]
+  },
+  {
+    id:"08", name:"08-TikTok Ads", icon:"📱", color:"#FF6B9D",
+    desc:"TikTok scripts, creative hooks, campaign strategy",
+    files:[
+      { name:"TikTok_Script_Template.txt", type:"template",
+        content:`TIKTOK AD SCRIPT TEMPLATE
+════════════════════════════════════════
+
+Client: _______________________________
+Product: ______________________________
+Objective: [ ] Awareness [ ] Traffic [ ] Conversion
+Duration: [ ] 15s  [ ] 30s  [ ] 60s
+
+HOOK (0-3 SECONDS) — MAKE OR BREAK
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Type: [ ] Bold statement [ ] Question [ ] Shock
+Hook script:
+Visual (on screen):
+
+BODY (3-25 SECONDS)
+━━━━━━━━━━━━━━━━━━━
+Point 1 (3-10s):
+Visual:
+
+Point 2 (10-18s):
+Visual:
+
+Point 3 / Proof (18-25s):
+Visual:
+
+CLOSE & CTA (Last 5 seconds)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+CTA line:
+On-screen text:
+
+PRODUCTION NOTES:
+Format: [ ] UGC [ ] Talking head [ ] B-roll [ ] Animation
+Music: [ ] Trending [ ] Brand [ ] None
+Subtitles: YES / NO
+Language: [ ] Arabic [ ] Darija [ ] French [ ] English
+
+CLAUDE PROMPT:
+"Write 5 TikTok ad scripts for [product] targeting
+[audience]. Hook in first 3 seconds. Duration: 30s.
+Tone: [brand voice]. CTA: [desired action]."` }
+    ]
+  },
+  {
+    id:"09", name:"09-Meta Ads", icon:"📣", color:"#1877F2",
+    desc:"Meta campaign strategy, ad copies, audience docs",
+    files:[
+      { name:"Meta_Campaign_Structure.txt", type:"guide",
+        content:`META ADS CAMPAIGN STRUCTURE GUIDE
+════════════════════════════════════════
+
+RECOMMENDED ACCOUNT STRUCTURE
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+CAMPAIGN 1: PROSPECTING (TOF)
+  Objective: Sales
+  Budget type: CBO
+  Ad Sets:
+    → Broad (no interests)
+    → Interest Stack (3-5 interests)
+    → Lookalike 2% (from purchasers)
+  Creatives: 3-5 variations per ad set
+
+CAMPAIGN 2: RETARGETING (BOF)
+  Objective: Sales
+  Budget type: ABO
+  Ad Sets:
+    → Website Visitors 7d
+    → Add to Cart 14d (no purchase)
+    → Video Viewers 75% (30d)
+  Creatives: Testimonials, discount, urgency
+
+CAMPAIGN 3: RETENTION
+  Objective: Catalog Sales
+  Audience: Customer list
+  Creatives: New arrivals, upsell, loyalty
+
+BUDGET ALLOCATION:
+  Prospecting:  60-70% of total budget
+  Retargeting:  25-30% of total budget
+  Retention:    5-10% of total budget
+
+SCALING RULES:
+  Scale when: CPA < Target AND ROAS > 2.5x for 3+ days
+  Scale by: 20%, wait 48h before next increase
+  Kill when: CPA > 2x target AND < 3 results in 7 days
+
+CREATIVE FATIGUE:
+  Frequency > 2.5 = creative fatigue → replace ads
+  Refresh every 2-3 weeks` }
+    ]
+  },
+  {
+    id:"10", name:"10-CRO Notes", icon:"🔁", color:"#F7B731",
+    desc:"Conversion rate optimization observations and tests",
+    files:[
+      { name:"CRO_Testing_Log.txt", type:"log",
+        content:`CRO TESTING LOG
+════════════════════════════════════════
+
+FORMAT FOR EACH TEST:
+━━━━━━━━━━━━━━━━━━━━
+
+TEST #001
+Date Started:
+Page/Element:
+Hypothesis: "If we [change X], conversion will
+[increase Y] because [reason Z]"
+Control (A):
+Variant (B):
+Traffic Split: 50/50
+Result: [ ] Ongoing [ ] Winner A [ ] Winner B
+CVR Control:
+CVR Variant:
+Statistical Significance:
+Notes:
+
+────────────────────────────────────────
+
+TEST #002
+Date Started:
+Page/Element:
+Hypothesis:
+Result:
+Notes:
+
+CRO QUICK WINS CHECKLIST:
+━━━━━━━━━━━━━━━━━━━━━━━━━
+[ ] Headline communicates value immediately
+[ ] CTA button is contrasting color
+[ ] No nav distractions above fold
+[ ] Social proof near CTA
+[ ] Form fields max 3
+[ ] Page loads under 3s mobile
+[ ] Trust badges visible
+[ ] Money-back guarantee stated
+[ ] Exit intent popup active
+[ ] Heatmap installed (Clarity/Hotjar)` }
+    ]
+  },
+  {
+    id:"11", name:"11-Content Ideas", icon:"💡", color:"#A29BFE",
+    desc:"Content bank, hooks, angles, and ideation notes",
+    files:[
+      { name:"Content_Ideas_Bank.txt", type:"bank",
+        content:`CONTENT IDEAS BANK
+════════════════════════════════════════
+
+UNIVERSAL CONTENT ANGLES
+━━━━━━━━━━━━━━━━━━━━━━━━
+1. "The mistake 90% make with [topic]"
+2. "I tried [X] for 30 days — here's what happened"
+3. "Why [common belief] is wrong"
+4. "The [industry] secret no one talks about"
+5. "Before/after: how we went from X to Y"
+6. "Step-by-step: how to [solve problem]"
+7. "The real reason [thing] doesn't work"
+8. "What I wish I knew before [big decision]"
+9. "This one change increased our [metric] by X%"
+10. "Unpopular opinion: [controversial take]"
+
+TIKTOK/REELS HOOKS
+━━━━━━━━━━━━━━━━━━
+• "Stop scrolling. This will save you [time/money]"
+• "POV: you finally found [solution]"
+• "Tell me you [have problem] without telling me"
+• "The [industry] hack that actually works"
+• "I paid [price] to learn this so you don't have to"
+
+META HOOKS
+━━━━━━━━━━
+• "If you're doing [X], you're losing money"
+• "We tested [X] ads. Here's what won."
+• "[Number] reasons your [thing] isn't converting"
+
+ADD YOUR IDEAS:
+━━━━━━━━━━━━━━
+[Date] | [Platform] | [Idea]
+
+CLAUDE PROMPT:
+"Here are 10 content ideas: [paste ideas]
+Generate 20 more for [platform] targeting [audience].
+Focus on [niche]. Format as numbered list."` }
+    ]
+  },
+  {
+    id:"12", name:"12-Prompts", icon:"🤖", color:"#FD79A8",
+    desc:"Saved Claude prompts for every marketing task",
+    files:[
+      { name:"Meta Analysis Prompt.txt", type:"prompt",
+        content:`META ADS ANALYSIS PROMPT
+════════════════════════════════════════
+COPY THIS + YOUR CSV DATA → PASTE INTO CLAUDE
+════════════════════════════════════════
+
+You are a senior Meta Ads analyst. Analyze this
+campaign data and return:
+
+1. TOP 3 PERFORMING ADS
+   - Name, spend, ROAS, CPA, and WHY winning
+
+2. BOTTOM 3 ADS TO PAUSE OR FIX
+   - What's wrong, pause or fix?
+
+3. BUDGET RECOMMENDATIONS
+   - Which to scale (how much %), reduce, kill
+
+4. AUDIENCE INSIGHTS
+   - Best segments, frequency concerns
+
+5. CREATIVE ANALYSIS
+   - Patterns in winners, fatigue signals
+
+6. 5 ACTION ITEMS FOR NEXT 7 DAYS
+   - Prioritized by impact
+
+7. ACCOUNT HEALTH SCORE: X/10
+
+CONTEXT:
+- Target CPA: [INSERT]
+- Target ROAS: [INSERT]
+- Objective: [Sales/Traffic/Leads]
+- Daily Budget: [INSERT]
+
+CSV DATA:
+[PASTE YOUR META EXPORT BELOW]` },
+      { name:"CRO Prompt.txt", type:"prompt",
+        content:`CRO AUDIT PROMPT
+════════════════════════════════════════
+COPY THIS + YOUR PAGE COPY → PASTE INTO CLAUDE
+════════════════════════════════════════
+
+You are a world-class CRO specialist.
+Analyze this landing page and return:
+
+1. FRICTION AUDIT
+   - Above-fold issues
+   - Copy clarity problems
+   - Trust deficit areas
+   - CTA weakness
+   - Mobile concerns
+
+2. HEADLINE ANALYSIS
+   - Current score: X/10
+   - 3 improved alternatives
+
+3. CTA OPTIMIZATION
+   - 3 stronger CTAs with reasoning
+
+4. SOCIAL PROOF GAPS
+   - What's missing, how to fix
+
+5. COPY IMPROVEMENTS
+   - Rewrite top 3 weakest sections
+
+6. A/B TEST PRIORITY LIST
+   - Top 5 tests ranked by impact
+
+7. QUICK WINS (24-hour fixes)
+
+CONTEXT:
+- Product: [DESCRIBE]
+- Audience: [DESCRIBE]
+- Traffic source: [Meta/TikTok/Organic]
+- Current CVR: [IF KNOWN]
+
+PAGE CONTENT:
+[PASTE YOUR LANDING PAGE COPY]` },
+      { name:"Content Hooks Prompt.txt", type:"prompt",
+        content:`CONTENT HOOKS GENERATOR PROMPT
+════════════════════════════════════════
+COPY THIS + BRAND BRIEF → PASTE INTO CLAUDE
+════════════════════════════════════════
+
+You are an expert direct response copywriter.
+Generate 20 scroll-stopping hooks for this brand.
+
+REQUIREMENTS:
+- Hook grabs attention in under 3 seconds
+- Mix: questions, bold statements, curiosity, stats
+- 5 hooks for TikTok (spoken-word)
+- 5 hooks for Meta (text-led)
+- 5 for Email subject lines
+- 5 universal (works everywhere)
+
+FORMAT:
+Hook #1 [Platform]: [Hook text]
+Angle: [Psychological trigger used]
+
+After 20 hooks:
+- Top 3 predicted performers + why
+- 2 "controversial" angles for this brand
+
+BRAND BRIEF:
+[PASTE YOUR BRAND BRIEF HERE]
+
+CONTEXT:
+- Best current hook (if any):
+- Key audience pain points:
+- Tone: [ ] Bold [ ] Warm [ ] Luxury [ ] Relatable` },
+      { name:"Ad Copy Generator Prompt.txt", type:"prompt",
+        content:`AD COPY GENERATOR PROMPT
+════════════════════════════════════════
+
+Write 5 complete Meta ad copies. Each includes:
+- Primary text (3 versions: short/medium/long)
+- 5 headline options
+- Description text
+- CTA recommendation
+
+Use these frameworks:
+  Ad 1: PAS (Problem-Agitate-Solution)
+  Ad 2: AIDA
+  Ad 3: Social proof led
+  Ad 4: Offer/discount focused
+  Ad 5: Story/transformation
+
+After copies:
+- Which to test first and why
+- Which emotion each copy targets
+
+BRIEF: [PASTE BRAND BRIEF]
+PRODUCT: [NAME + KEY BENEFIT]
+AUDIENCE: [TARGET]
+OFFER: [CURRENT OFFER]
+PLATFORM: [ ] Meta Feed [ ] Story [ ] TikTok` }
+    ]
+  },
+  {
+    id:"13", name:"13-SOPs", icon:"⚙️", color:"#55EFC4",
+    desc:"Standard Operating Procedures and launch checklists",
+    files:[
+      { name:"Meta Campaign Launch Checklist.txt", type:"checklist",
+        content:`META CAMPAIGN LAUNCH CHECKLIST
+════════════════════════════════════════
+Use before launching ANY Meta campaign.
+════════════════════════════════════════
+
+CLIENT: ______________________________
+CAMPAIGN: ____________________________
+LAUNCH DATE: _________________________
+
+PRE-LAUNCH — PIXEL & TRACKING
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+[ ] Meta Pixel installed
+[ ] Purchase event firing correctly
+[ ] Add To Cart event firing
+[ ] View Content event firing
+[ ] Conversions API (CAPI) connected
+[ ] UTM parameters on all URLs
+[ ] GA4 tracking confirmed
+
+CAMPAIGN SETTINGS
+━━━━━━━━━━━━━━━━━
+[ ] Correct objective (Sales vs Traffic)
+[ ] CBO configured
+[ ] Correct conversion event (Purchase)
+[ ] Attribution: 7-day click, 1-day view
+[ ] A/B test enabled if testing creatives
+
+AD SET SETTINGS
+━━━━━━━━━━━━━━━
+[ ] Audience 500K–2M
+[ ] Excluded: Existing customers (cold)
+[ ] Advantage+ Placements
+[ ] Budget: Min 3-5x target CPA/day
+
+CREATIVE CHECKLIST
+━━━━━━━━━━━━━━━━━━
+[ ] 3-5 creative variations per ad set
+[ ] Video: First 3s scroll-stopping
+[ ] Image: High contrast, product clear
+[ ] Copy: Primary text with 3 lengths
+[ ] Headline: 3-5 options entered
+[ ] CTA button: Correct action
+[ ] URL correct + UTM added
+[ ] Preview: Feed, Story, Reels
+
+POST-LAUNCH (First 48h)
+━━━━━━━━━━━━━━━━━━━━━━━
+[ ] Check delivery after 1 hour
+[ ] Confirm spend is occurring
+[ ] Pixel recording events
+[ ] First check at 48h (do NOT touch before)
+[ ] Log in 03-Campaign Reports
+
+DO NOT TOUCH RULES:
+⛔ No budget changes in first 48h
+⛔ No audience edits after launch
+⛔ No creative swaps during learning
+⛔ Do NOT duplicate in same ad set` },
+      { name:"Shopify CRO Checklist.txt", type:"checklist",
+        content:`SHOPIFY CRO LAUNCH CHECKLIST
+════════════════════════════════════════
+Use before sending traffic to Shopify.
+════════════════════════════════════════
+
+Store: ______________________________
+Date: _______________________________
+
+SPEED & TECHNICAL
+━━━━━━━━━━━━━━━━━
+[ ] Mobile speed > 60 (PageSpeed Insights)
+[ ] Images compressed
+[ ] Unused apps removed
+[ ] Theme code cleaned
+
+HOMEPAGE
+━━━━━━━━
+[ ] Hero communicates offer in <5 seconds
+[ ] CTA visible above fold on mobile
+[ ] Announcement bar showing offer
+[ ] Trust bar (secure, free shipping, returns)
+
+PRODUCT PAGES
+━━━━━━━━━━━━━
+[ ] Title clear and benefit-led
+[ ] First image high quality
+[ ] Price prominent
+[ ] Benefit bullets above fold
+[ ] Reviews visible (min 5)
+[ ] Sticky Add to Cart on mobile
+[ ] Scarcity (low stock warning)
+[ ] Trust badges near ATC
+[ ] Upsell/cross-sell configured
+
+CART & CHECKOUT
+━━━━━━━━━━━━━━━
+[ ] Cart drawer (not cart page)
+[ ] Free shipping threshold bar
+[ ] Cart upsell product
+[ ] "Secure checkout" visible
+[ ] COD option active (Morocco: critical)
+[ ] WhatsApp order confirmation set up
+[ ] Post-purchase upsell active
+
+ANALYTICS
+━━━━━━━━━
+[ ] Meta Pixel firing on all pages
+[ ] GA4 connected
+[ ] Microsoft Clarity installed
+[ ] Shopify Analytics currency set` }
+    ]
+  },
+  {
+    id:"14", name:"14-Clients", icon:"👥", color:"#74B9FF",
+    desc:"Individual client workspaces with all project files",
+    files:[
+      { name:"New_Client_Onboarding_SOP.txt", type:"sop",
+        content:`NEW CLIENT ONBOARDING SOP
+════════════════════════════════════════
+
+STEP 1: CREATE CLIENT FOLDER
+  → Create folder: [ClientName] — [StartDate]
+  → Subfolders: Reports, Creatives, Copies,
+    Landing Pages, Offers
+
+STEP 2: BRAND BRIEF (Day 1)
+  → Fill Brand_Brief_Template.txt
+  → Save to: 14-Clients/[Name]/
+
+STEP 3: AUDIT (Days 1-3)
+  → Shopify: Run Shopify CRO Checklist
+  → Meta: Request 90-day export → 03-Reports
+  → Run Claude analysis with Meta Prompt
+
+STEP 4: STRATEGY DOC (Days 3-5)
+  → Claude + Brand Brief → 30-day strategy
+  → Save in: 14-Clients/[Name]/
+
+STEP 5: LAUNCH (Days 5-14)
+  → Meta: Use Meta Launch Checklist
+  → TikTok: Use TikTok Script Template
+
+STEP 6: REPORTING RHYTHM
+  → Daily: Check spend, CPA, ROAS (5 min)
+  → Weekly: Claude analysis of full data
+  → Monthly: Full report to client` }
+    ],
+    subfolders:[
+      {
+        name:"Real Estate Client", icon:"🏠",
+        subs:["Reports","Creatives","Copies","Landing Pages","Offers"],
+        readme:`Strategy: Lead generation via Meta Ads
+Target: Buyers & investors in Morocco
+Key metric: Cost per lead < 80 MAD
+Focus: Arabic + French copy, video creatives`
+      },
+      {
+        name:"Perfume Brand", icon:"🌸",
+        subs:["Reports","Creatives","Copies","Landing Pages","Offers"],
+        readme:`Strategy: TikTok UGC + Meta retargeting
+Target: Women 18-35, luxury positioning
+Key metric: ROAS > 3x, CPA < 80 MAD
+Next test: TikTok Spark Ads with influencers`
+      },
+      {
+        name:"Ecommerce Store", icon:"🛒",
+        subs:["Reports","Creatives","Copies","Landing Pages","Offers"],
+        readme:`Strategy: ASC (Advantage+ Shopping) + retargeting
+Target: General ecommerce, product scaling
+Key metric: ROAS > 2.5x
+Focus: Daily spend optimization`
+      }
+    ]
+  },
+  {
+    id:"15", name:"15-Training Content", icon:"🎓", color:"#FDCB6E",
+    desc:"Education resources, swipe files, skill development",
+    files:[
+      { name:"Learning_Resources.txt", type:"guide",
+        content:`TRAINING CONTENT & RESOURCES
+════════════════════════════════════════
+
+RECOMMENDED LEARNING PATH
+━━━━━━━━━━━━━━━━━━━━━━━━━
+
+META ADS:
+  → Meta Blueprint (free, official)
+  → Ben Heath YouTube
+  → Andrew Foxwell — scaling frameworks
+
+TIKTOK ADS:
+  → TikTok Business Learning Center
+  → TikTok Creative Center (spy on winners)
+
+CRO:
+  → CXL blog (ConversionXL)
+  → "Making Websites Win" — Karl Blanks
+
+COPYWRITING:
+  → "Breakthrough Advertising" — Eugene Schwartz
+  → Gary Halbert's newsletters (free online)
+  → Swipe-File.com for inspiration
+
+SHOPIFY:
+  → Shopify Academy (free)
+  → Kurt Elster — Unofficial Shopify Podcast
+
+SWIPE FILE STRUCTURE:
+━━━━━━━━━━━━━━━━━━━━━
+/Winning_Hooks       → hooks that stopped scroll
+/Great_Headlines     → headlines you admire
+/Strong_CTAs         → CTAs that converted
+/Competitor_Ads      → competitor screenshots
+
+CLAUDE PROMPT FOR SWIPE FILES:
+"Here's an ad that performs well: [describe it]
+Analyze why it works. Create 5 adapted versions
+for my brand: [paste brief]"` }
+    ]
+  }
+];
+
+// File type icons and colors
+const FILE_ICONS = { prompt:"🤖", template:"📐", guide:"📖", checklist:"✅", csv:"📊", readme:"📝", log:"🗂️", sop:"⚙️", bank:"💡", default:"📄" };
+const FILE_COLORS = { prompt:"#FD79A8", template:"#74B9FF", guide:"#55EFC4", checklist:"#00CEC9", csv:"#00CEC9", readme:"#A29BFE", log:"#FF7675", sop:"#6C5CE7", bank:"#E17055" };
+
+// ══════════════════════════════════════
+// STATE
+// ══════════════════════════════════════
+let currentFolder = null;
+let currentFile = null;
+let currentNav = 'folders';
+
+// ══════════════════════════════════════
+// INIT
+// ══════════════════════════════════════
+window.addEventListener('DOMContentLoaded', () => {
+  renderFolderList(FOLDERS);
+  renderPrompts();
+  renderSOPs();
+  document.getElementById('readmeContent').textContent = README_TEXT;
+  updateClock();
+  setInterval(updateClock, 60000);
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('sw.js').catch(()=>{});
+  }
+});
+
+function updateClock() {
+  const now = new Date();
+  document.getElementById('clock').textContent =
+    now.getHours().toString().padStart(2,'0') + ':' + now.getMinutes().toString().padStart(2,'0');
+}
+
+// ══════════════════════════════════════
+// RENDER FOLDER LIST
+// ══════════════════════════════════════
+function renderFolderList(folders) {
+  const list = document.getElementById('folderList');
+  list.innerHTML = '';
+  folders.forEach(f => {
+    const card = document.createElement('div');
+    card.className = 'folder-card';
+    const count = (f.files?.length||0) + (f.subfolders?.length||0);
+    card.innerHTML = `
+      <div class="folder-icon-wrap" style="background:${f.color}22">${f.icon}</div>
+      <div class="folder-info">
+        <div class="folder-name">${f.name}</div>
+        <div class="folder-desc">${f.desc}</div>
+      </div>
+      <span class="folder-badge" style="color:${f.color};background:${f.color}22">${count}</span>
+      <span class="folder-arrow">›</span>`;
+    card.onclick = () => openFolder(f);
+    list.appendChild(card);
+  });
+}
+
+function filterFolders(q) {
+  if (!q) { renderFolderList(FOLDERS); return; }
+  const lq = q.toLowerCase();
+  const filtered = FOLDERS.filter(f =>
+    f.name.toLowerCase().includes(lq) ||
+    f.desc.toLowerCase().includes(lq) ||
+    f.files?.some(fi => fi.name.toLowerCase().includes(lq))
+  );
+  renderFolderList(filtered);
+}
+
+// ══════════════════════════════════════
+// OPEN FOLDER
+// ══════════════════════════════════════
+function openFolder(folder) {
+  currentFolder = folder;
+  document.getElementById('folderTitle').textContent = folder.name;
+  const content = document.getElementById('folderContent');
+  content.innerHTML = '';
+
+  // Files section
+  if (folder.files?.length) {
+    const label = document.createElement('div');
+    label.className = 'section-label';
+    label.textContent = 'Files';
+    content.appendChild(label);
+
+    folder.files.forEach(file => {
+      const card = document.createElement('div');
+      card.className = 'file-card';
+      const icon = FILE_ICONS[file.type] || FILE_ICONS.default;
+      const color = FILE_COLORS[file.type] || '#888';
+      card.innerHTML = `
+        <div class="file-type-icon">${icon}</div>
+        <div class="file-info">
+          <div class="file-name">${file.name}</div>
+          <span class="file-tag" style="color:${color};background:${color}22">${file.type||'txt'}</span>
+        </div>
+        <span class="file-arrow">›</span>`;
+      card.onclick = () => openFile(file, folder.color);
+      content.appendChild(card);
+    });
+  }
+
+  // Client subfolders
+  if (folder.subfolders?.length) {
+    const label2 = document.createElement('div');
+    label2.className = 'section-label';
+    label2.style.marginTop = '16px';
+    label2.textContent = 'Client Folders';
+    content.appendChild(label2);
+
+    folder.subfolders.forEach(client => {
+      const card = document.createElement('div');
+      card.className = 'client-card';
+      const bodyId = 'client_' + client.name.replace(/\s/g,'_');
+      card.innerHTML = `
+        <div class="client-header" onclick="toggleClient('${bodyId}',this)">
+          <span style="font-size:22px">${client.icon}</span>
+          <span class="client-name">${client.name}</span>
+          <span class="client-chevron" id="chev_${bodyId}">›</span>
+        </div>
+        <div class="client-body" id="${bodyId}">
+          <div class="subfolder-chips">${client.subs.map(s=>`<span class="chip" style="color:${folder.color};background:${folder.color}22">📁 ${s}</span>`).join('')}</div>
+          <div class="client-readme">${client.readme}</div>
+        </div>`;
+      content.appendChild(card);
+    });
+  }
+
+  // Bottom padding
+  const pad = document.createElement('div');
+  pad.style.height = '80px';
+  content.appendChild(pad);
+
+  showScreen('folder');
+  document.getElementById('folder').querySelector('.folder-content').scrollTop = 0;
+}
+
+function toggleClient(id, header) {
+  const body = document.getElementById(id);
+  const chev = document.getElementById('chev_' + id);
+  const isOpen = body.classList.contains('open');
+  body.classList.toggle('open', !isOpen);
+  chev.style.transform = isOpen ? '' : 'rotate(90deg)';
+}
+
+// ══════════════════════════════════════
+// OPEN FILE
+// ══════════════════════════════════════
+function openFile(file, accentColor) {
+  currentFile = file;
+  document.getElementById('fileTitle').textContent = file.name;
+  const tag = document.getElementById('fileTag');
+  const color = FILE_COLORS[file.type] || '#888';
+  tag.textContent = file.type || 'txt';
+  tag.style.color = color;
+  tag.style.background = color + '22';
+  document.getElementById('fileContent').textContent = file.content;
+  const copyBtn = document.getElementById('copyBtn');
+  copyBtn.classList.remove('copied');
+  copyBtn.textContent = 'Copy';
+  showScreen('file');
+  document.getElementById('file').querySelector('.file-body').scrollTop = 0;
+}
+
+function copyFile() {
+  if (!currentFile) return;
+  navigator.clipboard.writeText(currentFile.content).then(() => {
+    const btn = document.getElementById('copyBtn');
+    btn.textContent = '✓';
+    btn.classList.add('copied');
+    showToast();
+    setTimeout(() => { btn.textContent = 'Copy'; btn.classList.remove('copied'); }, 2000);
+  });
+}
+
+function copyReadme() {
+  navigator.clipboard.writeText(README_TEXT).then(() => showToast());
+}
+
+// ══════════════════════════════════════
+// PROMPTS QUICK VIEW
+// ══════════════════════════════════════
+function renderPrompts() {
+  const promptFolder = FOLDERS.find(f => f.id === '12');
+  const container = document.getElementById('promptsContent');
+  container.innerHTML = '<div class="section-label">Quick Access — All Claude Prompts</div>';
+
+  promptFolder.files.forEach(file => {
+    const card = document.createElement('div');
+    card.className = 'prompt-quick-card';
+    const preview = file.content.split('\n').slice(0,3).join(' ').substring(0, 120) + '...';
+    card.innerHTML = `
+      <div class="pq-title">🤖 ${file.name}</div>
+      <div class="pq-desc">${preview}</div>
+      <button class="pq-btn" onclick="openFileFromPrompts(${JSON.stringify(file).replace(/"/g,'&quot;')})">Open & Copy</button>`;
+    container.appendChild(card);
+  });
+
+  const pad = document.createElement('div');
+  pad.style.height = '80px';
+  container.appendChild(pad);
+}
+
+function openFileFromPrompts(file) {
+  // Parse if passed as string
+  const f = typeof file === 'string' ? JSON.parse(file.replace(/&quot;/g,'"')) : file;
+  openFile(f, '#FD79A8');
+}
+
+// ══════════════════════════════════════
+// SOPs QUICK VIEW
+// ══════════════════════════════════════
+function renderSOPs() {
+  const sopsFolder = FOLDERS.find(f => f.id === '13');
+  const container = document.getElementById('sopsContent');
+  container.innerHTML = '<div class="section-label">Quick Access — SOPs & Checklists</div>';
+
+  sopsFolder.files.forEach(file => {
+    const card = document.createElement('div');
+    card.className = 'file-card';
+    card.style.marginBottom = '10px';
+    card.innerHTML = `
+      <div class="file-type-icon">✅</div>
+      <div class="file-info">
+        <div class="file-name">${file.name}</div>
+        <span class="file-tag" style="color:#55EFC4;background:#55EFC422">${file.type}</span>
+      </div>
+      <span class="file-arrow">›</span>`;
+    card.onclick = () => openFile(file, '#55EFC4');
+    container.appendChild(card);
+  });
+
+  const pad = document.createElement('div');
+  pad.style.height = '80px';
+  container.appendChild(pad);
+}
+
+// ══════════════════════════════════════
+// README
+// ══════════════════════════════════════
+function openReadme() {
+  showScreen('readme');
+  setActiveNav('readme-nav');
+  document.getElementById('readme').querySelector('.readme-body').scrollTop = 0;
+}
+
+// ══════════════════════════════════════
+// NAV & SCREENS
+// ══════════════════════════════════════
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => {
+    s.classList.add('hidden');
+    s.classList.remove('slide-left');
+  });
+  document.getElementById(id).classList.remove('hidden');
+}
+
+function goBack(fromId, toId) {
+  document.getElementById(fromId).classList.add('hidden');
+  document.getElementById(toId).classList.remove('hidden');
+}
+
+function navTo(screenId, navKey) {
+  showScreen(screenId);
+  setActiveNav(navKey);
+}
+
+function setActiveNav(key) {
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  currentNav = key;
+  const map = { folders:'nav-folders', prompts:'nav-prompts', sops:'nav-sops', 'readme-nav':'nav-readme' };
+  const el = document.getElementById(map[key]);
+  if (el) el.classList.add('active');
+}
+
+function showToast() {
+  const t = document.getElementById('toast');
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2000);
+}
+</script>
+</body>
+</html>
